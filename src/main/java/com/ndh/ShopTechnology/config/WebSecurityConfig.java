@@ -29,9 +29,9 @@ import static org.springframework.http.HttpMethod.POST;
 @EnableMethodSecurity
 public class WebSecurityConfig {
 
-    private final CustomUserDetailsService userDetailsService;
-    private final JwtAuthenticationEntryPoint authenticationEntryPoint;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomUserDetailsService      userDetailsService;
+    private final JwtAuthenticationEntryPoint   authenticationEntryPoint;
+    private final JwtAuthenticationFilter       jwtAuthenticationFilter;
     private final String[] PUBLIC_ENDPOINTS = {"/"};
 
 
@@ -43,9 +43,9 @@ public class WebSecurityConfig {
             CustomUserDetailsService userDetailsService,
             JwtAuthenticationEntryPoint authenticationEntryPoint,
             JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.userDetailsService = userDetailsService;
-        this.authenticationEntryPoint = authenticationEntryPoint;
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.userDetailsService         = userDetailsService;
+        this.authenticationEntryPoint   = authenticationEntryPoint;
+        this.jwtAuthenticationFilter    = jwtAuthenticationFilter;
     }
 
     @Bean
@@ -55,11 +55,11 @@ public class WebSecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
         authProvider.setPasswordEncoder(encoder());
         return authProvider;
     }
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
@@ -75,10 +75,10 @@ public class WebSecurityConfig {
                             .permitAll()
 
 
-                            .requestMatchers(String.format("%s/admin/**", apiPrefix))
+                            .requestMatchers(String.format("/%s/admin/**", apiPrefix))
                             .hasAnyRole(RoleConstant.ROLE_ADMIN, RoleConstant.ROLE_EMPLOYEE, RoleConstant.ROLE_MANAGER)
 
-                            .requestMatchers(String.format("%s/auth/**", apiPrefix),String.format("%s/document/**", apiPrefix))
+                            .requestMatchers(String.format("/%s/auth/**", apiPrefix),String.format("/%s/document/**", apiPrefix))
                             .permitAll()
 
 

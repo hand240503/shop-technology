@@ -24,88 +24,86 @@ import java.util.Optional;
 @Service
 public class UserAuthServiceImpl implements UserAuthService {
 
-    private final UserRepository userRepository;
-    private final UserRoleRepository roleRepository;
+    private final UserRepository        userRepository;
+    private final UserRoleRepository    roleRepository;
 
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder       passwordEncoder;
 
     private final AuthenticationManager authenticationManager;
-    private final TokenProvider jwtTokenUtil;
+    private final TokenProvider         jwtTokenUtil;
 
     public UserAuthServiceImpl(UserRepository userRepository, UserRoleRepository roleRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenProvider jwtTokenUtil) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-        this.jwtTokenUtil = jwtTokenUtil;
+        this.userRepository         = userRepository;
+        this.roleRepository         = roleRepository;
+        this.passwordEncoder        = passwordEncoder;
+        this.authenticationManager  = authenticationManager;
+        this.jwtTokenUtil           = jwtTokenUtil;
     }
 
 
 
     @Override
     public UserResponse registerUser(RegisterUserRequest request) {
-        if (userRepository.existsByUsername(request.getUsername().toLowerCase().trim()))
+
+        String username = request.getUsername().toLowerCase().trim();
+        String phone = request.getPhoneNumber().trim();
+
+        if (userRepository.existsByUsername(username) || userRepository.existsByPhoneNumber(phone))
             return null;
 
-        if (userRepository.existsByPhoneNumber(request.getPhoneNumber().trim()))
-            return null;
 
-        UserRoleEntity role = null;
-        if (request.getRoleCode() == null)
-            request.setRoleCode(RoleConstant.ROLE_CUSTOMER);
+        String roleCode = Optional.ofNullable(request.getRoleCode())
+                .orElse(RoleConstant.ROLE_CUSTOMER)
+                .trim();
 
-        role = roleRepository.getUserRoleEntityByCode(request.getRoleCode().trim());
-        UserEntity user = UserEntity
-                .builder()
-                .username(request.getUsername().toLowerCase().trim())
+        UserRoleEntity role = roleRepository.getUserRoleEntityByCode(roleCode);
+
+        UserEntity user = UserEntity.builder()
+                .username(username)
                 .password(passwordEncoder.encode(request.getPassword().trim()))
                 .firstName(request.getFirstName().trim())
                 .lastName(request.getLastName().trim())
                 .email(request.getEmail().trim())
-                .phoneNumber(request.getPhoneNumber().trim())
+                .phoneNumber(phone)
                 .status(SystemConstant.ACTIVE_STATUS)
                 .build();
-        if (role != null) user.setRole(role);
+
+        if (role != null)
+            user.setRole(role);
+
 
         return UserResponse.fromEntity(userRepository.save(user));
     }
 
     @Override
     public LoginResponse login(LoginRequest request) throws Exception {
-        String uName = request.getLogin();
-        if (uName == null || uName.trim().isEmpty()) return null;
+        String login = Optional.ofNullable(request.getLogin())
+                .map(String::trim)
+                .orElse("");
+        if (login.isEmpty()) return null;
 
-        Optional<UserEntity> ent;
-        LoginResponse loginResponse = new LoginResponse();
-        String token = null;
+        Optional<UserEntity> userOpt = isPhoneNumber(login)
+                ? userRepository.findOneByPhoneNumber(login)
+                : userRepository.findOneByUsername(login);
 
-        if (isPhoneNumber(uName))
-            ent = userRepository.findOneByPhoneNumber(uName);
-        else
-            ent = userRepository.findOneByUsername(uName);
-
-        if (ent.isEmpty()) return null;
-
-        if (passwordEncoder.matches(request.getPassword(), ent.get().getPassword())) {
-
-            final Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getLogin(), request.getPassword()));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            token = jwtTokenUtil.generateToken(authentication);
-
-            ent.get().doBuildAuths();
-            ent.get().doBuildRoles();
-
-            UserResponse userResponse = UserResponse.fromEntity(ent.get());
-
-            loginResponse.setUserInfo(userResponse);
-            loginResponse.setToken(token);
-
-            return loginResponse;
+        UserEntity user = userOpt.orElse(null);
+        if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            return null;
         }
 
-        return null;
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(login, request.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        String token = jwtTokenUtil.generateToken(authentication);
+
+        user.doBuildAuths();
+        user.doBuildRoles();
+
+        return LoginResponse.builder()
+                .userInfo(UserResponse.fromEntity(user))
+                .token(token)
+                .build();
     }
 
 

@@ -84,8 +84,8 @@ public class AdminUserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<APIResponse> getUserInfo(@PathVariable Long id) {
-        UserEntity ent = userService.getUserEntity();
-        boolean hasPermission = APIAuthService.checkUserPermissions(
+        UserEntity ent          = userService.getUserEntity();
+        boolean hasPermission   = APIAuthService.checkUserPermissions(
                 ent,
                 DefAPIAuth.WORK_GET,
                 DefAPIAuth.R_AUT_USER_GET
@@ -107,8 +107,8 @@ public class AdminUserController {
 
     @PutMapping("")
     public ResponseEntity<APIResponse> modUerInfo(@RequestBody ModUserInfoRequest request) {
-        UserEntity ent = userService.getUserEntity();
-        boolean hasPermission = APIAuthService.checkUserPermissions(
+        UserEntity ent          = userService.getUserEntity();
+        boolean hasPermission   = APIAuthService.checkUserPermissions(
                 ent,
                 DefAPIAuth.WORK_MOD,
                 DefAPIAuth.R_AUT_USER_MOD

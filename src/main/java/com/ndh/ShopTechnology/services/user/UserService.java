@@ -11,10 +11,11 @@ import com.ndh.ShopTechnology.entities.user.UserEntity;
 public interface UserService {
     ResultPagination getAllUsers(PaginationRequest request);
 
-    UserEntity getUserEntity();
+    UserEntity getCurrentUser();
 
     UserResponse getUserInfo(Long id);
-    UserResponse getUserInfo();
+
+    UserResponse getProfile();
 
     UserResponse modUserInfo(ModUserInfoRequest ent);
 

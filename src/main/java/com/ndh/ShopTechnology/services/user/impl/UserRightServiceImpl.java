@@ -76,56 +76,53 @@ public class UserRightServiceImpl implements UserAuthRightService {
 //    }
 //
     private Set<Integer> extractRightsSet(String rights) {
-        rights = rights.replace("[", "").replace("]", "");
-        String[] rightsArray = rights.split(",");
-        Set<Integer> rightsSet = new HashSet<>();
-        for (String right : rightsArray) {
-            if (!right.trim().isEmpty()) {
-                rightsSet.add(Integer.parseInt(right.trim()));
-            }
-        }
-        return rightsSet;
+        if (rights == null || rights.isBlank()) return Set.of();
+
+        return Arrays.stream(
+                        rights.replace("[", "").replace("]", "").split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Integer::parseInt)
+                .collect(Collectors.toSet());
     }
 
 
     @Override
     public UserAuthRightEntity manageUserRights(int mode, UserEntity user, Set<Integer> rights, Long manId) {
-        if (user == null || rights == null)
-            return null;
-        UserAuthRightEntity entRight = null;
-        if (mode == DefAPIAuth.MODE_NEW) {
-            // No action is required for mode 1
-        } else if (mode == DefAPIAuth.MODE_MOD) {
-            entRight = userRightRepository.findByUserIdAndType(user.getId(), DefAPIAuth.AUTH_TYPE_MODIFIABLE);
-        }
+        if (user == null || rights == null) return null;
+
+        UserAuthRightEntity entRight = (mode == DefAPIAuth.MODE_MOD)
+                ? userRightRepository.findByUserIdAndType(user.getId(), DefAPIAuth.AUTH_TYPE_MODIFIABLE)
+                : null;
 
         if (entRight == null) {
             entRight = new UserAuthRightEntity();
-        }
-
-        if (user.getId() == manId) return entRight;
-
-        Set<Integer> setRightsMod = new HashSet<>();
-        if (user.getRole().getId() == DefAPIAuth.TYPE_ADMIN) {
-            setRightsMod.addAll(rights);
-        } else {
-            UserAuthRightEntity manRight = userRightRepository.findByUserIdAndType(manId, DefAPIAuth.AUTH_TYPE_MODIFIABLE);
-            if (manRight == null) return null;
-
-            String manRights = manRight.getAuthRights();
-            Set<Integer> manRightsSet = extractRightsSet(manRights);
-            for (Integer r : rights) {
-                if (manRightsSet.contains(r)) setRightsMod.add(r);
-            }
-        }
-
-        if (entRight.getId() == null)
             entRight.setUser(user);
+        }
+
+        if (user.getId().equals(manId)) return entRight;
+
+        Set<Integer> setRightsMod = (user.getRole().getId() == DefAPIAuth.TYPE_ADMIN)
+                ? new HashSet<>(rights)
+                : filterRightsByManager(rights, manId);
+
+        if (setRightsMod == null) return null;
 
         entRight.setAuthRights(setRightsMod.toString());
         entRight.setStatus(SystemConstant.ACTIVE_STATUS);
         entRight.setType(DefAPIAuth.AUTH_TYPE_MODIFIABLE);
 
         return userRightRepository.save(entRight);
+    }
+
+    private Set<Integer> filterRightsByManager(Set<Integer> requestedRights, Long manId) {
+        UserAuthRightEntity manRight = userRightRepository.findByUserIdAndType(manId, DefAPIAuth.AUTH_TYPE_MODIFIABLE);
+        if (manRight == null) return null;
+
+        Set<Integer> manRightsSet = extractRightsSet(manRight.getAuthRights());
+
+        return requestedRights.stream()
+                .filter(manRightsSet::contains)
+                .collect(Collectors.toSet());
     }
 }

@@ -4,24 +4,12 @@ import com.ndh.ShopTechnology.def.DefRes;
 import com.ndh.ShopTechnology.dto.request.user.ModUserInfoRequest;
 import com.ndh.ShopTechnology.dto.response.APIResponse;
 import com.ndh.ShopTechnology.dto.response.user.UserResponse;
-import com.ndh.ShopTechnology.entities.user.UserEntity;
 import com.ndh.ShopTechnology.services.user.UserService;
-import com.ndh.ShopTechnology.utils.FileUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 @RequestMapping("${api.prefix}/users")
@@ -40,7 +28,7 @@ public class UserController {
     @Operation(summary = "Get user profile information", description = "Retrieve the profile information of the user")
     @GetMapping("/profile")
     public ResponseEntity<APIResponse> getUserInfo() {
-        UserResponse ent = userService.getUserInfo();
+        UserResponse ent = userService.getProfile();
         if (ent == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(APIResponse.doResponse(
@@ -53,7 +41,7 @@ public class UserController {
                 .body(APIResponse.doResponse(
                         DefRes.STAT_CODE, DefRes.STATUS_SUCCESS,
                         DefRes.RES_DES, "User information retrieved successfully",
-                        DefRes.RES_DATA, userService.getUserInfo()
+                        DefRes.RES_DATA, userService.getProfile()
                 ));
     }
 
@@ -63,7 +51,7 @@ public class UserController {
         UserResponse updatedUser = userService.modProfileInfo(request);
 
         if (updatedUser == null) {
-            return ResponseEntity.status(HttpStatus.OK)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(APIResponse.doResponse(
                             DefRes.STAT_CODE, DefRes.STATUS_BAD_REQUEST,
                             DefRes.RES_DES, "Failed to update user profile"

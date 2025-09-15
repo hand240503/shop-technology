@@ -90,10 +90,10 @@ public class UserEntity extends BaseEntity {
     private Set<UserAuthRightEntity> authRights = new HashSet<>();
 
     @Transient
-    private HashSet<Integer> O_Rights;
+    private HashSet<Integer> O_Rights ;
 
     @Transient
-    private HashSet<Long> O_Roles;
+    private HashSet<Long> O_Roles ;
 
 
     public void doBuildRoles(){

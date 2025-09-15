@@ -2,9 +2,7 @@ package com.ndh.ShopTechnology.controller.admin;
 
 import com.ndh.ShopTechnology.def.DefAPIAuth;
 import com.ndh.ShopTechnology.def.DefRes;
-import com.ndh.ShopTechnology.dto.request.PaginationRequest;
 import com.ndh.ShopTechnology.dto.request.user.CreateUserRequest;
-import com.ndh.ShopTechnology.dto.response.ResultPagination;
 import com.ndh.ShopTechnology.dto.request.user.ModUserInfoRequest;
 import com.ndh.ShopTechnology.dto.response.APIResponse;
 import com.ndh.ShopTechnology.dto.response.user.UserResponse;
@@ -84,7 +82,7 @@ public class AdminUserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<APIResponse> getUserInfo(@PathVariable Long id) {
-        UserEntity ent          = userService.getUserEntity();
+        UserEntity ent          = userService.getCurrentUser();
         boolean hasPermission   = APIAuthService.checkUserPermissions(
                 ent,
                 DefAPIAuth.WORK_GET,
@@ -107,7 +105,7 @@ public class AdminUserController {
 
     @PutMapping("")
     public ResponseEntity<APIResponse> modUerInfo(@RequestBody ModUserInfoRequest request) {
-        UserEntity ent          = userService.getUserEntity();
+        UserEntity ent          = userService.getCurrentUser();
         boolean hasPermission   = APIAuthService.checkUserPermissions(
                 ent,
                 DefAPIAuth.WORK_MOD,

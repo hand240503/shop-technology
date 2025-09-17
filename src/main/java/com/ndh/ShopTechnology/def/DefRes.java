@@ -8,6 +8,7 @@ public class DefRes {
     public static final String RES_DATA     = "res_data";
     public static final String RES_DES      = "res_des";
     public static final String USER_ID      = "user_id";
+    public static final String RES_ERS      = "res_ers";
 
     // Mã trạng thái HTTP
     public static final int STATUS_SUCCESS          = 200;

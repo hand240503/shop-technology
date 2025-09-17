@@ -1,21 +1,57 @@
 package com.ndh.ShopTechnology.exception;
 
-import io.jsonwebtoken.ExpiredJwtException;
+import com.ndh.ShopTechnology.constant.MessageConstant;
+import com.ndh.ShopTechnology.def.DefRes;
+import com.ndh.ShopTechnology.dto.response.APIResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j(topic = "GLOBAL_EXCEPTION_HANDLER")
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(value = ExpiredJwtException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ResponseEntity<Object> handleExpiredJwtException(ExpiredJwtException exception) {
-        log.error("JWT token has expired", exception);
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("JWT token has expired");
+    @ExceptionHandler(value = NotFoundEntityException.class)
+    public ResponseEntity<APIResponse> handleNotFound(NotFoundEntityException ex) {
+        log.error("NotFoundEntityException: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(APIResponse.doResponse(
+                        DefRes.STAT_CODE, HttpStatus.NOT_FOUND.value(),
+                        DefRes.RES_ERS, ex.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(value = AuthenticationFailedException.class)
+    public ResponseEntity<APIResponse> handleAuthFailed(AuthenticationFailedException ex) {
+        log.error("AuthenticationFailedException: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(APIResponse.doResponse(
+                        DefRes.STAT_CODE, HttpStatus.UNAUTHORIZED.value(),
+                        DefRes.RES_DES,ex.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(value = MethodArgumentNotValidException.class)
+    public ResponseEntity<APIResponse> handleValidationException(MethodArgumentNotValidException ex) {
+        log.error("Validation error: {}", ex.getMessage());
+
+        Map<String, String> errors = new HashMap<>();
+        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
+            errors.put(fieldError.getField(), fieldError.getDefaultMessage());
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(APIResponse.doResponse(
+                        DefRes.STAT_CODE, HttpStatus.BAD_REQUEST.value(),
+                        DefRes.RES_DES, MessageConstant.VALIDATION_FAILED,
+                        DefRes.RES_ERS, errors
+                ));
     }
 }

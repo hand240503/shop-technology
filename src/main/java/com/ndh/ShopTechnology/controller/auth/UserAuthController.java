@@ -1,5 +1,6 @@
 package com.ndh.ShopTechnology.controller.auth;
 
+import com.ndh.ShopTechnology.constant.MessageConstant;
 import com.ndh.ShopTechnology.def.DefRes;
 import com.ndh.ShopTechnology.dto.request.auth.LoginRequest;
 import com.ndh.ShopTechnology.dto.request.auth.RegisterUserRequest;
@@ -31,19 +32,10 @@ public class UserAuthController {
     public ResponseEntity<?> registerUser(@RequestBody @Valid RegisterUserRequest request) {
         UserResponse ent = userAuthService.registerUser(request);
 
-        if (ent == null) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(APIResponse.doResponse(
-                            DefRes.RES_DES, "Failed to register user.",
-                            DefRes.STAT_CODE, DefRes.STATUS_BAD_REQUEST
-                    ));
-        }
-
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(APIResponse.doResponse(
-                        DefRes.RES_DES, "User registered successfully",
+                        DefRes.RES_DES, MessageConstant.USER_REGISTER_SUCCESS,
                         DefRes.STAT_CODE, DefRes.STATUS_CREATED,
                         DefRes.RES_DATA, ent
                 ));
@@ -54,14 +46,6 @@ public class UserAuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequest request) throws Exception {
         LoginResponse res = userAuthService.login(request);
-        if (res == null) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(APIResponse.doResponse(
-                            DefRes.RES_DES, "Login failed. Invalid username or password.",
-                            DefRes.STAT_CODE, DefRes.STATUS_NOT_FOUND
-                    ));
-        }
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(APIResponse.doResponse(

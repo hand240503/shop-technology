@@ -2,6 +2,7 @@ package com.ndh.ShopTechnology.filters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ndh.ShopTechnology.config.TokenProvider;
+import com.ndh.ShopTechnology.constant.MessageConstant;
 import com.ndh.ShopTechnology.constant.SystemConstant;
 import com.ndh.ShopTechnology.def.DefRes;
 import com.ndh.ShopTechnology.dto.response.APIResponse;
@@ -37,32 +38,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String header = request.getHeader(SystemConstant.HEADER_STRING);
-        String username = null;
-        String authToken = null;
+        String header       = request.getHeader(SystemConstant.HEADER_STRING);
+        String username     = null;
+        String authToken    = null;
 
         if (header != null && header.startsWith(SystemConstant.TOKEN_PREFIX)) {
             authToken = header.replace(SystemConstant.TOKEN_PREFIX, "");
             try {
                 username = jwtTokenUtil.getUsernameFromToken(authToken);
             } catch (IllegalArgumentException e) {
-                logger.error("An error occurred during getting username from token", e);
+                logger.error(MessageConstant.ERROR_GET_USERNAME, e);
             } catch (ExpiredJwtException e) {
-                logger.warn("The token is expired and not valid anymore", e);
+                logger.warn(MessageConstant.TOKEN_EXPIRED_LOG, e);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
 
                 APIResponse apiResponse = APIResponse.doResponse(
                         DefRes.STAT_CODE, DefRes.STATUS_UNAUTHORIZED,
-                        DefRes.RES_DES, "JWT expired"
+                        DefRes.RES_DES, MessageConstant.TOKEN_EXPIRED_RESPONSE
                 );
                 response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
                 return;
             } catch (SignatureException e) {
-                logger.error("Authentication Failed. Username or Password not valid.");
+                logger.error(MessageConstant.AUTH_FAILED);
             }
+
         } else {
-            logger.warn("Couldn't find bearer string, will ignore the header");
+            logger.warn(MessageConstant.BEARER_MISSING);
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -72,7 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authentication =
                         jwtTokenUtil.getAuthentication(authToken, SecurityContextHolder.getContext().getAuthentication(), userDetails);
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                logger.info("Authenticated user " + username + ", setting security context");
+                logger.info(String.format(MessageConstant.AUTH_SUCCESS_PREFIX, username));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }

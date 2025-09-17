@@ -69,17 +69,17 @@ public class UserServiceImpl implements UserService {
     private UserEntity applyModFields(UserEntity existingUser, ModUserInfoRequest req) {
         if (req == null || existingUser == null) return existingUser;
 
-        if (req.getFirstName() != null) existingUser.setFirstName(req.getFirstName());
-        if (req.getLastName() != null) existingUser.setLastName(req.getLastName());
-        if (req.getEmail() != null) existingUser.setEmail(req.getEmail());
-        if (req.getPhoneNumber() != null) existingUser.setPhoneNumber(req.getPhoneNumber());
-        if (req.getAvatar() != null) existingUser.setAvatar(req.getAvatar());
-        if (req.getStatus() != null) existingUser.setStatus(req.getStatus());
-        if (req.getType() != null) existingUser.setType(req.getType());
-        if (req.getInfo_01() != null) existingUser.setInfo_01(req.getInfo_01());
-        if (req.getInfo_02() != null) existingUser.setInfo_02(req.getInfo_02());
-        if (req.getInfo_03() != null) existingUser.setInfo_03(req.getInfo_03());
-        if (req.getInfo_04() != null) existingUser.setInfo_04(req.getInfo_04());
+        if (req.getFirstName()      != null) existingUser.setFirstName(req.getFirstName());
+        if (req.getLastName()       != null) existingUser.setLastName(req.getLastName());
+        if (req.getEmail()          != null) existingUser.setEmail(req.getEmail());
+        if (req.getPhoneNumber()    != null) existingUser.setPhoneNumber(req.getPhoneNumber());
+        if (req.getAvatar()         != null) existingUser.setAvatar(req.getAvatar());
+        if (req.getStatus()         != null) existingUser.setStatus(req.getStatus());
+        if (req.getType()           != null) existingUser.setType(req.getType());
+        if (req.getInfo_01()        != null) existingUser.setInfo_01(req.getInfo_01());
+        if (req.getInfo_02()        != null) existingUser.setInfo_02(req.getInfo_02());
+        if (req.getInfo_03()        != null) existingUser.setInfo_03(req.getInfo_03());
+        if (req.getInfo_04()        != null) existingUser.setInfo_04(req.getInfo_04());
 
         if (StringUtils.hasText(req.getPassword())) {
             existingUser.setPassword(passwordEncoder.encode(req.getPassword()));
@@ -92,13 +92,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResultPagination getAllUsers(PaginationRequest request) {
-        int page = (request.getPage() == null) ? 0 : request.getPage();
+        int page = (request.getPage() == null) ? 0  : request.getPage();
         int size = (request.getSize() == null) ? 10 : request.getSize();
 
-        Pageable pageable = PageRequest.of(page, size);
-        Page<UserEntity> userPage = userRepository.findAll(pageable);
+        Pageable            pageable    =   PageRequest.of(page, size);
+        Page<UserEntity>    userPage    =   userRepository.findAll(pageable);
 
-        List<UserResponse> responses = UserResponse.fromListEntity(userPage.getContent());
+        List<UserResponse>  responses   =   UserResponse.fromListEntity(userPage.getContent());
         return responses.isEmpty()
                 ? new ResultPagination(responses, 0, 0, 0)
                 : new ResultPagination(responses, (int) userPage.getTotalElements(), page, size);

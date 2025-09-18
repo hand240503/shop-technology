@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.nio.file.AccessDeniedException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,6 +53,16 @@ public class GlobalExceptionHandler {
                         DefRes.STAT_CODE, HttpStatus.BAD_REQUEST.value(),
                         DefRes.RES_DES, MessageConstant.VALIDATION_FAILED,
                         DefRes.RES_ERS, errors
+                ));
+    }
+
+    @ExceptionHandler(value = AccessDeniedException.class)
+    public ResponseEntity<APIResponse> handleAccessDenied(AccessDeniedException ex) {
+        log.error("AccessDeniedException: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(APIResponse.doResponse(
+                        DefRes.STAT_CODE, HttpStatus.FORBIDDEN.value(),
+                        DefRes.RES_DES, MessageConstant.ACCESS_DENIED
                 ));
     }
 }

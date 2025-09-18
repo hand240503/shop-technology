@@ -82,20 +82,6 @@ public class AdminUserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<APIResponse> getUserInfo(@PathVariable Long id) {
-        UserEntity ent          = userService.getCurrentUser();
-        boolean hasPermission   = APIAuthService.checkUserPermissions(
-                ent,
-                DefAPIAuth.WORK_GET,
-                DefAPIAuth.R_AUT_USER_GET
-        );
-        if (!hasPermission) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(APIResponse.doResponse(
-                            DefRes.STAT_CODE, DefRes.STATUS_FORBIDDEN,
-                            DefRes.RES_DES, "You do not have permission to perform this action."
-                    ));
-        }
-
         return ResponseEntity.status(HttpStatus.OK)
                 .body(APIResponse.doResponse(
                         DefRes.STAT_CODE, DefRes.STATUS_SUCCESS,
@@ -105,21 +91,6 @@ public class AdminUserController {
 
     @PutMapping("")
     public ResponseEntity<APIResponse> modUerInfo(@RequestBody ModUserInfoRequest request) {
-        UserEntity ent          = userService.getCurrentUser();
-        boolean hasPermission   = APIAuthService.checkUserPermissions(
-                ent,
-                DefAPIAuth.WORK_MOD,
-                DefAPIAuth.R_AUT_USER_MOD
-        );
-
-        if (!hasPermission) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(APIResponse.doResponse(
-                            DefRes.STAT_CODE, DefRes.STATUS_FORBIDDEN,
-                            DefRes.RES_DES, "You do not have permission to perform this action."
-                    ));
-        }
-
         return ResponseEntity.status(HttpStatus.OK)
                 .body(APIResponse.doResponse(
                         DefRes.STAT_CODE, DefRes.STATUS_SUCCESS,

@@ -65,6 +65,7 @@ public class UserAuthServiceImpl implements UserAuthService {
                 .map(String::trim)
                 .orElse(RoleConstant.ROLE_CUSTOMER);
 
+        /*Check password(Nếu cần)*/
         String password = Optional.ofNullable(request.getPassword())
                 .map(String::trim)
                 .orElseThrow(() -> new IllegalArgumentException(MessageConstant.PASSWORD_REQUIRED));

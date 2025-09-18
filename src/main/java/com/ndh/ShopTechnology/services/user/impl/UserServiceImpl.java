@@ -1,5 +1,6 @@
 package com.ndh.ShopTechnology.services.user.impl;
 
+import com.ndh.ShopTechnology.constant.MessageConstant;
 import com.ndh.ShopTechnology.constant.RoleConstant;
 import com.ndh.ShopTechnology.constant.SystemConstant;
 import com.ndh.ShopTechnology.def.DefAPIAuth;
@@ -12,6 +13,7 @@ import com.ndh.ShopTechnology.entities.user.UserEntity;
 import com.ndh.ShopTechnology.entities.user.UserRoleEntity;
 import com.ndh.ShopTechnology.repository.UserRepository;
 import com.ndh.ShopTechnology.repository.UserRoleRepository;
+import com.ndh.ShopTechnology.services.common.APIAuthService;
 import com.ndh.ShopTechnology.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -111,6 +113,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse getUserInfo(Long id) {
+        UserEntity ent = getCurrentUser();
+
+        boolean hasPermission = APIAuthService.checkUserPermissions(
+                ent,
+                DefAPIAuth.WORK_GET,
+                DefAPIAuth.R_AUT_USER_GET
+        );
+
+        if (!hasPermission) {
+            throw new AccessDeniedException(MessageConstant.NO_PERMISSION_ACTION);
+        }
         return toResponse(loadUser(id));
     }
 
@@ -121,12 +134,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse modUserInfo(ModUserInfoRequest req) {
-        if (req == null || req.getId() == null) return null;
+        if (req == null || req.getId() == null) {
+            return null;
+        }
+
+        UserEntity currentUser = getCurrentUser();
+
+        boolean hasPermission = APIAuthService.checkUserPermissions(
+                currentUser,
+                DefAPIAuth.WORK_MOD,
+                DefAPIAuth.R_AUT_USER_MOD
+        );
+
+        if (!hasPermission) {
+            throw new AccessDeniedException(MessageConstant.NO_PERMISSION_ACTION);
+        }
+
         UserEntity target = loadUser(req.getId());
         if (target == null) return null;
 
         return modifyUserInfo(req, target);
     }
+
 
 
     @Override

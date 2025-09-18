@@ -49,7 +49,7 @@ public class UserAuthController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(APIResponse.doResponse(
-                        DefRes.RES_DES, "Login successful.",
+                        DefRes.RES_DES, MessageConstant.LOGIN_SUCCESS,
                         DefRes.STAT_CODE, DefRes.STATUS_SUCCESS,
                         DefRes.RES_DATA, res.getUserInfo(),
                         DefRes.USER_TOK, res.getToken()

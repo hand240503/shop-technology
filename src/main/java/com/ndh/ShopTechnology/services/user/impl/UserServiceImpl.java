@@ -16,6 +16,7 @@ import com.ndh.ShopTechnology.exception.NotFoundEntityException;
 import com.ndh.ShopTechnology.repository.UserRepository;
 import com.ndh.ShopTechnology.repository.UserRoleRepository;
 import com.ndh.ShopTechnology.services.common.APIAuthService;
+import com.ndh.ShopTechnology.services.redis.UserRedisService;
 import com.ndh.ShopTechnology.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,8 +40,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserRightServiceImpl userRightServiceImpl;
     private final PasswordEncoder passwordEncoder;
-    private final UserRoleRepository roleRepository;
-
+    private final UserRoleRepository userRoleRepository;
+    private final UserRedisService userRedisService;
     /* ================== Helpers ================== */
 
     private UserEntity getCurrentUserEntity() {
@@ -49,9 +50,38 @@ public class UserServiceImpl implements UserService {
             throw new AuthenticationFailedException(MessageConstant.AUTH_FAILED);
         }
 
-        UserEntity user = userRepository.findOneByUsername(auth.getName()).get();
+        String username = auth.getName();
+
+        UserResponse cachedUser = userRedisService.getUser(username);
+        if (cachedUser != null) {
+            UserEntity user = new UserEntity();
+            user.setId(cachedUser.getId());
+            user.setUsername(cachedUser.getUsername());
+            user.setEmail(cachedUser.getEmail());
+            user.setPhoneNumber(cachedUser.getPhoneNumber());
+            user.setAvatar(cachedUser.getAvatar());
+            user.setStatus(cachedUser.getStatus());
+            user.setType(cachedUser.getType());
+            user.setO_Rights(cachedUser.getRights());
+            user.setO_Roles(cachedUser.getRoles());
+
+            if (cachedUser.getRoles() != null && !cachedUser.getRoles().isEmpty()) {
+                Long roleId = cachedUser.getRoles().iterator().next();
+                user.setRole(userRoleRepository.findById(roleId).orElse(null));
+            }
+
+            user.doBuildAuths();
+            user.doBuildRoles();
+            return user;
+        }
+
+        UserEntity user = userRepository.findOneByUsername(username)
+                .orElseThrow(() -> new AuthenticationFailedException(MessageConstant.AUTH_FAILED));
         user.doBuildAuths();
         user.doBuildRoles();
+
+        userRedisService.saveUser(UserResponse.fromEntity(user), 3600);
+
         return user;
     }
 
@@ -128,7 +158,7 @@ public class UserServiceImpl implements UserService {
         );
 
         if (!hasPermission) {
-            throw new AccessDeniedException(MessageConstant.NO_PERMISSION_ACTION);
+            throw new AuthenticationFailedException(MessageConstant.NO_PERMISSION_ACTION);
         }
         return toResponse(loadUser(id));
     }
@@ -176,7 +206,7 @@ public class UserServiceImpl implements UserService {
         UserEntity ent = applyUpdateFields(user, req);
 
         if (req.getRole() != null) {
-            roleRepository.findById(req.getRole()).ifPresent(ent::setRole);
+            userRoleRepository.findById(req.getRole()).ifPresent(ent::setRole);
         }
 
         ent = userRepository.save(ent);
@@ -216,7 +246,7 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         Long roleId = (request.getRole() != null) ? request.getRole() : RoleConstant.ROLE_EMPLOYEE_ID;
-        roleRepository.findById(roleId).ifPresent(ent::setRole);
+        userRoleRepository.findById(roleId).ifPresent(ent::setRole);
 
         ent = userRepository.save(ent);
 

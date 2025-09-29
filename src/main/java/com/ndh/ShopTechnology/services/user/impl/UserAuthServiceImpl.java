@@ -14,6 +14,7 @@ import com.ndh.ShopTechnology.exception.AuthenticationFailedException;
 import com.ndh.ShopTechnology.exception.NotFoundEntityException;
 import com.ndh.ShopTechnology.repository.UserRepository;
 import com.ndh.ShopTechnology.repository.UserRoleRepository;
+import com.ndh.ShopTechnology.services.redis.UserRedisService;
 import com.ndh.ShopTechnology.services.user.UserAuthService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,13 +35,15 @@ public class UserAuthServiceImpl implements UserAuthService {
 
     private final AuthenticationManager authenticationManager;
     private final TokenProvider         jwtTokenUtil;
+    private final UserRedisService      userRedisService;
 
-    public UserAuthServiceImpl(UserRepository userRepository, UserRoleRepository roleRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenProvider jwtTokenUtil) {
+    public UserAuthServiceImpl(UserRepository userRepository, UserRoleRepository roleRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenProvider jwtTokenUtil, UserRedisService userRedisService) {
         this.userRepository         = userRepository;
         this.roleRepository         = roleRepository;
         this.passwordEncoder        = passwordEncoder;
         this.authenticationManager  = authenticationManager;
         this.jwtTokenUtil           = jwtTokenUtil;
+        this.userRedisService       = userRedisService;
     }
 
 
@@ -103,7 +106,6 @@ public class UserAuthServiceImpl implements UserAuthService {
                 : userRepository.findOneByUsername(login))
                 .orElseThrow(() -> new AuthenticationFailedException(MessageConstant.AUTH_FAILED));
 
-
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new AuthenticationFailedException(MessageConstant.AUTH_FAILED);
         }
@@ -117,11 +119,16 @@ public class UserAuthServiceImpl implements UserAuthService {
         user.doBuildAuths();
         user.doBuildRoles();
 
+        UserResponse userResponse = UserResponse.fromEntity(user);
+
+        userRedisService.saveUser(userResponse, 3600);
+
         return LoginResponse.builder()
-                .userInfo(UserResponse.fromEntity(user))
+                .userInfo(userResponse)
                 .token(token)
                 .build();
     }
+
 
 
 

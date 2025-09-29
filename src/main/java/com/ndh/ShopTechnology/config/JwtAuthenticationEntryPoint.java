@@ -1,6 +1,7 @@
 package com.ndh.ShopTechnology.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ndh.ShopTechnology.constant.MessageConstant;
 import com.ndh.ShopTechnology.def.DefRes;
 import com.ndh.ShopTechnology.dto.response.APIResponse;
 import jakarta.servlet.ServletException;
@@ -29,12 +30,13 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint, Se
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
         APIResponse apiResponse = APIResponse.doResponse(
-                DefRes.STAT_CODE, DefRes.STATUS_NOT_FOUND,
-                DefRes.RES_DES, "Login failed. Invalid username or password."
+                DefRes.STAT_CODE, DefRes.STATUS_FORBIDDEN,
+                DefRes.RES_DES, MessageConstant.ACCESS_DENIED
         );
+
 
         response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
     }

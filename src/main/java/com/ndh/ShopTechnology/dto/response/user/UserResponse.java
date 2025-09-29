@@ -41,9 +41,9 @@ public class UserResponse {
 
     private String info_04;
 
-    private Set<Integer> rights;
+    private HashSet<Integer> rights;
 
-    private Set<Long> roles;
+    private HashSet<Long> roles;
 
     private String roleName;
 

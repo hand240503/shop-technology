@@ -34,4 +34,8 @@ public class MessageConstant {
 
     // Error messages
     public static final String USER_PROFILE_UPDATE_FAILED  = "Failed to update user profile.";
+
+    // Message category
+    public static final String CATEGORY_CREATE_SUCCESS = "Category created successfully!";
+    public static final String CATEGORY_LIST_SUCCESS   = "Category list retrieved successfully!";
 }

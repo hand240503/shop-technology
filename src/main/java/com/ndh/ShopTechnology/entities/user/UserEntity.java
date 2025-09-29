@@ -80,7 +80,7 @@ public class UserEntity extends BaseEntity {
     @Column(name = COL_MAN_ID, nullable = true)
     private Long manId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = COL_USER_ROLE_ID)
     @JsonIgnore
     private UserRoleEntity role;
